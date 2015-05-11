@@ -73,7 +73,8 @@ module SunlightApi
 		end
 
 		def append_signature
-			@signature = Digest::HMAC.hexdigest(@base_url, @private_key, Digest::SHA256).upcase
+			@digest  = OpenSSL::Digest::Digest.new('sha256')
+			@signature = OpenSSL::HMAC.hexdigest(@digest, @private_key, @base_url).upcase
 			@url = "#{@base_url}&signature=#{@signature}"
 		end
 	end
