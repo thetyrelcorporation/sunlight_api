@@ -1,6 +1,8 @@
 require "sunlight_api/version"
 require "rquest"
 require "json"
+# Fix ruby's DNS lookup issues
+require "resolv-replace.rb"
 
 module SunlightApi
 	class Client
@@ -34,10 +36,17 @@ module SunlightApi
 			request("part/#{id}")
 		end
 
+		def product_price_breaks( id )
+			request("pricebreak/#{id}")
+		end
+
 		def each_product( &block )
 			array_of_product_ids.each do |product_id|
 				product = product_info( product_id )
 				next unless product
+				price_breaks = product_price_breaks(product_id)
+				price_breaks ||= []
+				product["PriceBreaks"] = price_breaks
 				yield product
 			end
 		end
