@@ -50,6 +50,10 @@ module SunlightApi
 				yield product
 			end
 		end
+
+		def products_array
+			request("part")
+		end
 	end
 	class UriGenerator
 		attr_reader :url
