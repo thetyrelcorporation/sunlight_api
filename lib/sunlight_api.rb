@@ -6,17 +6,30 @@ require "resolv-replace.rb"
 
 module SunlightApi
 	class Client
-		def initialize( public_key, private_key )
+		def initialize( public_key, private_key, test=false )
 			@public_key = public_key
 			@private_key = private_key
+			@test = test
 		end
 
 		def request( action )
-			uri = SunlightApi::UriGenerator::new(@public_key, @private_key, action, {format: "json"}).url
+			uri = SunlightApi::UriGenerator::new(@public_key, @private_key, @test, action, {format: "json"}).url
 			rclient = Rquest::new({verb: :get, uri: uri})
 			body = rclient.send
 			return nil if body.class == Hash and not body['error'].nil?
 			JSON::parse( body )
+		end
+
+		def post_request( action, params )
+			uri = SunlightApi::UriGenerator::new(@public_key, @private_key, @test, action, {format: "json"}).url
+			rclient = Rquest::new({verb: :post, uri: uri, payload: params})
+			body = rclient.send
+			return nil if body.class == Hash and not body['error'].nil?
+			JSON::parse( body )
+		end
+
+		def place_order(params )
+			post_request("order", params)
 		end
 
 		def inventory
@@ -57,10 +70,15 @@ module SunlightApi
 	end
 	class UriGenerator
 		attr_reader :url
-		def initialize( public_key, private_key, uri_suffix, get_params={} )
+		def initialize( public_key, private_key, test, uri_suffix, get_params={} )
 			@public_key = public_key
 			@private_key = private_key
-			@base_url = "https://services.sunlightsupply.com/v1/#{uri_suffix}?"
+			@test = test
+			if @test
+				@base_url = "https://hortservices.sunlightsupply.com/v1/#{uri_suffix}?"
+			else
+				@base_url = "https://services.sunlightsupply.com/v1/#{uri_suffix}?"
+			end
 			@get_params = get_params
 			@time_stamp = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 			append_get_params
